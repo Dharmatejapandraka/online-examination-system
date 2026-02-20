@@ -1,0 +1,36 @@
+<h1>Student Dashboard</h1>
+
+<p>Welcome, {{ user.username }} 👋</p>
+
+<a href="/">Back to Home</a>
+<hr>
+
+<h2>Your Exam History</h2>
+
+{% if results %}
+    <table border="1" cellpadding="10">
+        <tr>
+            <th>Exam</th>
+            <th>Score</th>
+            <th>Violations</th>
+            <th>Status</th>
+        </tr>
+
+        {% for result in results %}
+        <tr>
+            <td>{{ result.exam.title }}</td>
+            <td>{{ result.score }}</td>
+            <td>{{ result.violations }}</td>
+            <td>
+                {% if result.is_canceled %}
+                    ❌ Canceled
+                {% else %}
+                    ✅ Completed
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>No exams attempted yet.</p>
+{% endif %}

@@ -1,0 +1,97 @@
+<h2>{{ exam.title }}</h2>
+
+<div id="timer" style="font-size:20px; color:red;"></div>
+
+<form method="post" id="examForm">
+    {% csrf_token %}
+    <input type="hidden" name="violations" id="violationsInput" value="0">
+    <input type="hidden" name="canceled" id="canceledInput" value="false">
+
+    {% for question in questions %}
+        <p><strong>{{ question.question_text }}</strong></p>
+
+        <input type="radio" name="{{ question.id }}" value="{{ question.option1 }}"> {{ question.option1 }}<br>
+        <input type="radio" name="{{ question.id }}" value="{{ question.option2 }}"> {{ question.option2 }}<br>
+        <input type="radio" name="{{ question.id }}" value="{{ question.option3 }}"> {{ question.option3 }}<br>
+        <input type="radio" name="{{ question.id }}" value="{{ question.option4 }}"> {{ question.option4 }}<br>
+        <hr>
+    {% endfor %}
+
+    <button type="submit">Submit Exam</button>
+</form>
+
+<script>
+let violationCount = 0;
+
+// FULLSCREEN REQUIRED
+function enterFullScreen() {
+    document.documentElement.requestFullscreen();
+}
+enterFullScreen();
+
+// Detect exit fullscreen
+document.addEventListener("fullscreenchange", function() {
+    if (!document.fullscreenElement) {
+        cancelExam("Exited fullscreen mode.");
+    }
+});
+
+// Prevent refresh
+window.onbeforeunload = function () {
+    return "Refreshing is not allowed during the exam!";
+};
+
+// Disable right click
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+// Disable copy
+document.addEventListener("copy", e => {
+    e.preventDefault();
+    alert("Copying not allowed!");
+});
+
+// Tab switching detection
+document.addEventListener("visibilitychange", function() {
+    if (document.hidden) {
+        violationCount++;
+        updateViolation();
+
+        if (violationCount == 1) {
+            alert("Warning 1: Do not switch tabs!");
+        } else if (violationCount == 2) {
+            alert("Warning 2: Next switch will cancel exam!");
+        } else {
+            cancelExam("Exam canceled due to tab switching.");
+        }
+    }
+});
+
+function updateViolation() {
+    document.getElementById("violationsInput").value = violationCount;
+}
+
+function cancelExam(message) {
+    alert(message);
+    document.getElementById("canceledInput").value = "true";
+    document.getElementById("examForm").submit();
+}
+
+// TIMER COUNTDOWN
+let timeLeft = {{ exam.duration }} * 60;
+let timerDisplay = document.getElementById("timer");
+
+let countdown = setInterval(function() {
+    let minutes = Math.floor(timeLeft / 60);
+    let seconds = timeLeft % 60;
+
+    timerDisplay.innerHTML = "Time Left: " + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+
+    if (timeLeft <= 0) {
+        clearInterval(countdown);
+        alert("Time is up! Exam auto submitted.");
+        document.getElementById("examForm").submit();
+    }
+
+    timeLeft--;
+}, 1000);
+</script>
